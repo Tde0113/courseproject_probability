@@ -1,0 +1,51 @@
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['axes.unicode_minus'] = False
+results = []
+prob_dict = {}
+max_prob = 0.0
+best_combination = (0, 0)
+for x in range(0, 51):
+    for y in range(0, 51):
+        if x + y < 1:
+            continue
+        total2 = (50 - x) + (50 - y)
+        if total2 < 1:
+            continue
+        p1 = x / (x + y) if (x + y) > 0 else 0.0
+        p2 = (50 - x) / total2 if total2 > 0 else 0.0
+        prob = 0.5 * p1 + 0.5 * p2
+        results.append((x, y, prob))
+        prob_dict[(x, y)] = prob
+        if prob > max_prob:
+            max_prob = prob
+            best_combination = (x, y)
+p2_white = 50 - best_combination[0]
+p2_black = 50 - best_combination[1]
+key_combinations = []
+try:
+    p1 = [r[2] for r in results if r[0] == 1 and r[1] == 0][0]
+    key_combinations.append((1, 0, p1))
+except IndexError:
+    key_combinations.append((1, 0, 0.0))
+try:
+    p25 = [r[2] for r in results if r[0] == 25 and r[1] == 25][0]
+    key_combinations.append((25, 25, p25))
+except IndexError:
+    key_combinations.append((25, 25, 0.0))
+prob_matrix = np.full((51, 51), -1.0)
+for (x, y), prob in prob_dict.items():
+    prob_matrix[x, y] = prob
+plt.figure(figsize=(12, 10))
+plt.contourf(prob_matrix.T, levels=np.linspace(0, 0.75, 20), cmap='viridis', origin='lower')
+contour = plt.contour(prob_matrix.T, levels=[0.5, 0.6, 0.7, 0.747],
+                      colors='white', linestyles='--', origin='lower')
+plt.clabel(contour, inline=True, fontsize=10)
+plt.colorbar(label='摸到白球的概率')
+plt.xlabel('口袋1的白球数x')
+plt.ylabel('口袋1的黑球数y')
+plt.scatter(best_combination[0], best_combination[1], color='red', s=200,
+            label=f'最优组合（{best_combination[0]}白{best_combination[1]}黑，概率≈0.747）')
+plt.legend()
+plt.show()
