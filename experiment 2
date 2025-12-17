@@ -1,0 +1,68 @@
+import random
+import matplotlib.pyplot as plt
+plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['axes.unicode_minus'] = False
+def treatment_simulation(n_trials):
+    diseases = ['A', 'B', 'C']
+    disease_probs = [0.7, 0.2, 0.1]
+    drug_a = {'A': 0.6, 'B': 1.0, 'C': 0.4}
+    drug_b = {'A': 0.65, 'B': 0.5, 'C': 0.9}
+    drug_c = {'A': 0.75, 'B': 0.2, 'C': 0.5}
+    success_a = success_b = success_c = 0
+    for _ in range(n_trials):
+        disease = random.choices(diseases, weights=disease_probs)[0]
+        if random.random() <= drug_a[disease]:
+            success_a += 1
+        if random.random() <= drug_b[disease]:
+            success_b += 1
+        if random.random() <= drug_c[disease]:
+            success_c += 1
+    theory_a = disease_probs[0] * drug_a['A'] + disease_probs[1] * drug_a['B'] + disease_probs[2] * drug_a['C']
+    theory_b = disease_probs[0] * drug_b['A'] + disease_probs[1] * drug_b['B'] + disease_probs[2] * drug_b['C']
+    theory_c = disease_probs[0] * drug_c['A'] + disease_probs[1] * drug_c['B'] + disease_probs[2] * drug_c['C']
+    return success_a, success_b, success_c, theory_a, theory_b, theory_c
+if __name__ == '__main__':
+    n_trials = 100000
+    try:
+        a_succ, b_succ, c_succ, theory_a, theory_b, theory_c = treatment_simulation(n_trials)
+        a_rate = a_succ / n_trials
+        b_rate = b_succ / n_trials
+        c_rate = c_succ / n_trials
+        rates = {'药物A': a_rate, '药物B': b_rate, '药物C': c_rate}
+        best_drug = max(rates, key=rates.get)
+        drugs = ['药物A', '药物B', '药物C']
+        sim_rates = [a_rate, b_rate, c_rate]
+        theory_rates = [theory_a, theory_b, theory_c]
+        plt.figure(figsize=(10, 6))
+        bar_width = 0.35
+        x = range(len(drugs))
+        plt.bar([i - bar_width/2 for i in x], sim_rates, width=bar_width, label='仿真成功率', color='#1f77b4')
+        plt.bar([i + bar_width/2 for i in x], theory_rates, width=bar_width, label='理论成功率', color='#ff7f0e')
+        for i, v in enumerate(sim_rates):
+            plt.text(i - bar_width/2, v + 0.005, f'{v:.4f}', ha='center', va='bottom', fontsize=9)
+        for i, v in enumerate(theory_rates):
+            plt.text(i + bar_width/2, v + 0.005, f'{v:.4f}', ha='center', va='bottom', fontsize=9)
+        plt.title(f'三种药物治疗成功率对比（试验次数：{n_trials:,}次）', fontsize=12)
+        plt.xlabel('药物类型', fontsize=10)
+        plt.ylabel('成功率', fontsize=10)
+        plt.xticks(x, drugs)
+        plt.ylim(0, 0.8)
+        plt.legend()
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.tight_layout()
+        plt.show()
+        plt.figure(figsize=(8, 5))
+        colors = ['#1f77b4' if drug != best_drug else '#2ca02c' for drug in drugs]
+        bars = plt.bar(drugs, sim_rates, color=colors)
+        for i, (bar, v) in enumerate(zip(bars, sim_rates)):
+            plt.text(bar.get_x() + bar.get_width()/2, v + 0.005, f'{v:.4f}', ha='center', va='bottom', fontsize=9)
+            if drugs[i] == best_drug:
+                plt.text(bar.get_x() + bar.get_width()/2, v/2, '最优', ha='center', va='center', fontsize=10, color='white', fontweight='bold')
+        plt.xlabel('药物类型', fontsize=10)
+        plt.ylabel('仿真成功率', fontsize=10)
+        plt.ylim(0, 0.8)
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.tight_layout()
+        plt.show()
+    except ValueError as e:
+        print(f"程序执行错误：{e}")
